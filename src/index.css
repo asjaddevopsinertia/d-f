@@ -23,3 +23,23 @@ body{
   font-family: AN;
   color: #001837;
 }
+
+.react-calendar-datetime-picker .calender-modal{
+  width: 100% !important;
+}
+
+.react-calendar-datetime-picker .header{
+  background-color: #6A64F1 !important;
+}
+
+.react-calendar-datetime-picker .daysList .daysList-day{
+  border-radius: 0px !important;
+}
+
+.react-calendar-datetime-picker .daysList .is-today {
+  box-shadow: inset 0 0 0 2px #6A64F1 !important;
+}
+
+.react-calendar-datetime-picker .daysList .is-selected-day{
+  background-color: #6A64F1 !important;
+}

@@ -9,7 +9,8 @@ import {
 } from "../store/slices/MultistepSlice";
 import img from "../assets/images/x-mark.png";
 import check from "../assets/images/checked.png";
-
+import { DtCalendar, DtPicker } from 'react-calendar-datetime-picker'
+import 'react-calendar-datetime-picker/dist/style.css'
 import { loginAsync } from "../store/slices/UserSlice";
 
 const MultiStepForm = () => {
@@ -135,7 +136,7 @@ const MultiStepForm = () => {
           ...prevAddressData,
           user_id: response.data.userId,
         }));
-        setStep(2);
+        setStep(3);
       })
       .catch(function (error) {
         console.log("this is the error", error.response.data.message);
@@ -244,6 +245,7 @@ const MultiStepForm = () => {
   // console.log("form", formData);
 
   const loginUser = () => {
+    console.log("set user")
     axios
       .post("http://localhost:4000/user/login", userLoginData)
       .then(function (response) {
@@ -261,7 +263,8 @@ const MultiStepForm = () => {
           ...prevAddressData,
           user_id: response.data.userId,
         }));
-        setStep(2);
+        setStep(3);
+        console.log("step", step)
       })
       .catch(function (error) {
         console.log("this is the error", error.response.data.message);
@@ -319,10 +322,13 @@ const MultiStepForm = () => {
     service3: 40,
   };
 
+  const [selectedAddons, setSelectedAddons] = useState([]);
   // Calculate total price function
-  const calculateTotalPrice = (r, b, t, s) => {
-    const roomPrice = (r || numberOfRooms) * 48;
-    const bathroomPrice = (b || numberOfBathrooms) * 72;
+  useEffect(() => {
+
+    console.log("vatttttttttttt", numberOfRooms, 'bbbbbbbbbbbbbbbbbbbbbb', numberOfBathrooms)
+    const roomPrice = numberOfRooms * 48;
+    const bathroomPrice = numberOfBathrooms * 72;
 
     var mainPrice =
       type === "Apartment"
@@ -339,6 +345,19 @@ const MultiStepForm = () => {
     } else if (serv === "Heavy") {
       basePrice = basePrice * 1.4;
     }
+
+    console.log("baseeeeeeeeeeee", basePrice)
+    var addonsTotal;
+
+    if(Array.isArray(selectedAddons) && selectedAddons.length > 0){
+    addonsTotal = selectedAddons.reduce((total, addon) => total + parseFloat(addon.price), 0);
+    basePrice = basePrice + addonsTotal
+    }
+    else{
+    addonsTotal = 0
+    }
+
+    
 
     if (type === "House" || type === "Apartment") {
       const totalPrice = basePrice;
@@ -359,18 +378,22 @@ const MultiStepForm = () => {
       const totalPrice = (RentalPrice * basePrice) / mainPrice;
       console.log(totalPrice.toFixed(2));
       setTotal(totalPrice.toFixed(2));
+    } else {
+      console.log("this ran")
+      const totalPrice = basePrice;
+      setTotal(totalPrice.toFixed(2));
     }
-  };
+  }, [numberOfRooms, numberOfBathrooms, serv, type, selectedAddons])
 
   // Event handlers for user input changes
   const handleRoomsChange = (event) => {
     setNumberOfRooms(parseInt(event.target.value, 10));
-    calculateTotalPrice(parseInt(event.target.value, 10), null, null, null);
+    // calculateTotalPrice();
   };
 
   const handleBathroomsChange = (event) => {
     setNumberOfBathrooms(parseInt(event.target.value, 10));
-    calculateTotalPrice(null, parseInt(event.target.value, 10), null, null);
+    // calculateTotalPrice();
   };
 
   const handleTypeChange = (event) => {
@@ -385,7 +408,7 @@ const MultiStepForm = () => {
 
     // Now you can use the 'title' variable as needed
     setType(title);
-    calculateTotalPrice();
+    // calculateTotalPrice();
   };
 
   const handleServiceChange = (event) => {
@@ -400,7 +423,25 @@ const MultiStepForm = () => {
 
     // Now you can use the 'title' variable as needed
     setSer(title);
-    calculateTotalPrice();
+    // calculateTotalPrice();
+  };
+
+
+  const handleAddonChange = (event, extra_id, extra_price) => {
+    const isChecked = event.target.checked;
+
+    if (isChecked) {
+      // Add the selected addon to the state
+      setSelectedAddons((prevSelectedAddons) => [
+        ...prevSelectedAddons,
+        { id: extra_id, name: event.target.value, price: extra_price },
+      ]);
+    } else {
+      // Remove the unselected addon from the state
+      setSelectedAddons((prevSelectedAddons) =>
+        prevSelectedAddons.filter((addon) => addon.id !== extra_id)
+      );
+    }
   };
 
   console.log("numberofroooms", numberOfRooms);
@@ -409,6 +450,11 @@ const MultiStepForm = () => {
   console.log("selectedService", selectedService);
 
   console.log("toal", total);
+  console.log("selectedaddons", selectedAddons)
+  const [date, setDate] = useState(null)
+
+
+  console.log("date", date)
 
   return (
     <>
@@ -431,11 +477,10 @@ const MultiStepForm = () => {
                   <div className="flex mb-4 justify-between pt-[15px]">
                     <div className="flex items-center justify-center">
                       <div
-                        className={`${
-                          step === 1
+                        className={`${step === 1
                             ? "bg-[#6A64F1] w-[36px] h-[36px] mr-[10px] rounded-[50%] text-[#fff] flex justify-center items-center"
                             : "bg-[#DDE3E3] w-[36px] h-[36px] mr-[10px] rounded-[50%] text-[#536387] flex justify-center items-center"
-                        }`}
+                          }`}
                       >
                         1
                       </div>
@@ -446,11 +491,10 @@ const MultiStepForm = () => {
                     </div>
                     <div className="flex items-center justify-center">
                       <div
-                        className={`${
-                          step === 2
+                        className={`${step === 2
                             ? "bg-[#6A64F1] w-[36px] h-[36px] mr-[10px] rounded-[50%] text-[#fff] flex justify-center items-center"
                             : "bg-[#DDE3E3] w-[36px] h-[36px] mr-[10px] rounded-[50%] text-[#536387] flex justify-center items-center"
-                        }`}
+                          }`}
                       >
                         2
                       </div>
@@ -461,13 +505,12 @@ const MultiStepForm = () => {
                     </div>
                     <div className="flex items-center justify-center">
                       <div
-                        className={`${
-                          step === 2
+                        className={`${step === 3
                             ? "bg-[#6A64F1] w-[36px] h-[36px] mr-[10px] rounded-[50%] text-[#fff] flex justify-center items-center"
                             : "bg-[#DDE3E3] w-[36px] h-[36px] mr-[10px] rounded-[50%] text-[#536387] flex justify-center items-center"
-                        }`}
+                          }`}
                       >
-                        2
+                        3
                       </div>
 
                       <div className="">
@@ -476,13 +519,12 @@ const MultiStepForm = () => {
                     </div>
                     <div className="flex items-center justify-center">
                       <div
-                        className={`${
-                          step === 3
+                        className={`${step === 4
                             ? "bg-[#6A64F1] w-[36px] h-[36px] mr-[10px] rounded-[50%] text-[#fff] flex justify-center items-center"
                             : "bg-[#DDE3E3] w-[36px] h-[36px] mr-[10px] rounded-[50%] text-[#536387] flex justify-center items-center"
-                        }`}
+                          }`}
                       >
-                        3
+                        4
                       </div>
 
                       <div className="">
@@ -491,13 +533,12 @@ const MultiStepForm = () => {
                     </div>
                     <div className="flex items-center justify-center">
                       <div
-                        className={`${
-                          step === 4
+                        className={`${step === 5
                             ? "bg-[#6A64F1] w-[36px] h-[36px] mr-[10px] rounded-[50%] text-[#fff] flex justify-center items-center"
                             : "bg-[#DDE3E3] w-[36px] h-[36px] mr-[10px] rounded-[50%] text-[#536387] flex justify-center items-center"
-                        }`}
+                          }`}
                       >
-                        4
+                        5
                       </div>
 
                       <div className="">
@@ -516,10 +557,12 @@ const MultiStepForm = () => {
                       handleBathroomsChange={handleBathroomsChange}
                       handleTypeChange={handleTypeChange}
                       handleServiceChange={handleServiceChange}
-                      calculateTotalPrice={calculateTotalPrice}
+                      // calculateTotalPrice={calculateTotalPrice}
                       total={total}
                       step={step}
                       setStep={setStep}
+                      handleAddonChange={handleAddonChange}
+                      selectedAddons={selectedAddons}
                     />
                   ) : step === 2 ? (
                     <Step2
@@ -532,6 +575,7 @@ const MultiStepForm = () => {
                       userLoginData={userLoginData}
                       setUserLoginData={setUserLoginData}
                       loginUser={loginUser}
+                      setDate = {setDate}
                     />
                   ) : step === 3 ? (
                     <Step3
@@ -597,21 +641,33 @@ const Step1 = ({
   handleTypeChange,
   calculateTotalPrice,
   total,
+  handleAddonChange,
   step = { step },
   setStep = { setStep },
+  selectedAddons
 }) => (
   <>
     {" "}
-    <div className="flex flex-col">
-      <div className="flex justify-between space-x-[20px]">
-        <div className="flex flex-1 flex-col">
-          <label>Select Service</label>
-          <select
-            class="w-full bg-[#FFF] border border-[#DDE3EC] text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-2"
-            onChange={handleServiceChange}
-          >
-            {Array.isArray(allServices) && allServices.length > 0
-              ? allServices.map((x) => {
+    <form onSubmit={(e) => {
+      e.preventDefault(); // Prevent the default form submission behavior
+      // Manually trigger the form validation
+      if (e.target.checkValidity()) {
+        // If the form is valid, proceed with your logic (e.g., login())
+        setStep(step + 1)
+      }
+    }}>
+      <div className="flex flex-col">
+        <div className="flex justify-between space-x-[20px]">
+          <div className="flex flex-1 flex-col">
+            <label>Select Service</label>
+            <select
+              required
+              class="w-full bg-[#FFF] border border-[#DDE3EC] text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-2"
+              onChange={handleServiceChange}
+            >
+              <option selected disabled value="">Select Service</option>
+              {Array.isArray(allServices) && allServices.length > 0
+                ? allServices.map((x) => {
                   return (
                     <option
                       x={x.service_id}
@@ -622,74 +678,92 @@ const Step1 = ({
                     </option>
                   );
                 })
-              : null}
-          </select>
+                : null}
+            </select>
+          </div>
+          <div className="flex flex-1 flex-col">
+            <label>Number of rooms</label>
+            <input
+              required={true}
+              class="w-full bg-[#FFF] border border-[#DDE3EC] text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-2"
+              type="text"
+              onChange={handleRoomsChange}
+            />
+          </div>
+
         </div>
 
-        <div className="flex flex-1 flex-col">
-          <label>Select Type</label>
-          <select
-            class="w-full bg-[#FFF] border border-[#DDE3EC] text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-2"
-            onChange={handleTypeChange}
-          >
-            {Array.isArray(allTypes) && allTypes.length > 0
-              ? allTypes.map((x) => {
+        <div className="flex justify-between space-x-[20px] mt-[20px]">
+
+
+          <div className="flex flex-1 flex-col">
+            <label>Number of bathrooms</label>
+            <input
+              class="w-full bg-[#FFF] border border-[#DDE3EC] text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-2"
+              type="text"
+              onChange={handleBathroomsChange}
+              required={true}
+            />
+          </div>
+
+          <div className="flex flex-1 flex-col">
+            <label>Select Type</label>
+            <select
+              required
+              class="w-full bg-[#FFF] border border-[#DDE3EC] text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-2"
+              onChange={handleTypeChange}
+            >
+              <option selected disabled value="">Select Type</option>
+              {Array.isArray(allTypes) && allTypes.length > 0
+                ? allTypes.map((x) => {
                   return (
                     <option x={x.id} title={x.type} value={x.price}>
                       {x.type}
                     </option>
                   );
                 })
-              : null}
-          </select>
+                : null}
+            </select>
+          </div>
         </div>
+
+        <div className="flex justify-between space-x-4 mt-4">
+          <div className="flex flex-1 flex-col">
+            <label>Select Addons</label>
+            <div className="h-[250px]  border border-[#DDE3EC] text-gray-900 text-sm rounded-lg overflow-x-hidden overflow-y-visible mt-[10px] p-2.5">
+              {Array.isArray(allAddons) && allAddons.length > 0 ? (
+                allAddons.map((x) => (
+                  <div key={x.extra_id} className="flex items-center mt-2">
+                    <input
+                      type="checkbox"
+                      id={x.extra_id}
+                      value={x.extra_name}
+                      checked={selectedAddons.some((addon) => addon.id === x.extra_id)}
+                      onChange={(event) => handleAddonChange(event, x.extra_id, x.price)}
+                      className="mr-2"
+                    />
+                    <label htmlFor={x.extra_id}>{x.extra_name}</label>
+                  </div>
+                ))
+              ) : (
+                <p>No addons available</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <p className="mt-[20px]" >
+          Total Price : {total}
+        </p>
       </div>
 
-      <div className="flex justify-between space-x-[20px] mt-[20px]">
-        <div className="flex flex-1 flex-col">
-          <label>Number of rooms</label>
-          <input
-            class="w-full bg-[#FFF] border border-[#DDE3EC] text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-2"
-            type="text"
-            onChange={handleRoomsChange}
-          />
-        </div>
+      <div className="flex justify-end">
+        <input type="submit" value="Next"
+          className="mt-[20px] text-black bg-[#EDEDED] hover:bg-[#0142E8] focus:ring-4 focus:outline-none hover:text-[white] focus:ring-blue-300 rounded-[8px] sm:w-auto px-5 py-2.5 text-center"
 
-        <div className="flex flex-1 flex-col">
-          <label>Number of bathrooms</label>
-          <input
-            class="w-full bg-[#FFF] border border-[#DDE3EC] text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-2"
-            type="text"
-            onChange={handleBathroomsChange}
-          />
-        </div>
+        />
       </div>
-
-      <div className="flex justify-between space-x-[20px] mt-[20px]">
-        <div className="flex flex-1 flex-col">
-          <label>Select Addons</label>
-          <select class="w-full bg-[#FFF] border border-[#DDE3EC] text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-2">
-            {Array.isArray(allAddons) && allAddons.length > 0
-              ? allAddons.map((x) => {
-                  return <option x={x.extra_id}>{x.extra_name}</option>;
-                })
-              : null}
-          </select>
-        </div>
-      </div>
-
-      <p className="mt-[20px]" onClick={() => calculateTotalPrice()}>
-        Total Price : {total}
-      </p>
-    </div>
-    <div className="flex justify-end">
-      <button
-        className="mt-[20px] text-black bg-[#EDEDED] hover:bg-[#0142E8] focus:ring-4 focus:outline-none hover:text-[white] focus:ring-blue-300 rounded-[8px] sm:w-auto px-5 py-2.5 text-center"
-        onClick={() => setStep(step + 1)}
-      >
-        Next
-      </button>
-    </div>
+    </form>
   </>
 );
 
@@ -703,8 +777,14 @@ const Step2 = ({
   setUserLoginData,
   loginUser,
   setLoginState,
+  setDate
 }) => (
   <div>
+
+
+  
+  {/* <DtCalendar onChange={setDate} withTime showTimeInput = {true} isRequired = {true}/> */}
+
     {loginState ? (
       <form
         onSubmit={(e) => {
@@ -1021,6 +1101,7 @@ const Step3 = (props) => {
                     Choose Appointment Date:
                   </label>
                   <input
+                    open={true}
                     className="bg-[#FFF] border border-[#DDE3EC] text-[#536387] text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-2"
                     type="datetime-local"
                     id="appointmentDate"
@@ -1058,14 +1139,14 @@ const Step4 = (props) => (
       <h3 className="text-[20px] mt-[10px] mb-[10px]">Your Service :</h3>
       {Array.isArray(props.services) && props.services.length > 0
         ? props.services.map((x) => (
-            <h4
-              className="text-[20px] font-bold leading-[34px] pb-[10px]"
-              key={x.id}
-              value={x.id}
-            >
-              {x.name}
-            </h4>
-          ))
+          <h4
+            className="text-[20px] font-bold leading-[34px] pb-[10px]"
+            key={x.id}
+            value={x.id}
+          >
+            {x.name}
+          </h4>
+        ))
         : null}
 
       <h3 className="mb-[10px] mt-[10px] text-[20px]">Extras Selected:</h3>
@@ -1077,10 +1158,10 @@ const Step4 = (props) => (
       >
         {Array.isArray(props.extras) && props.extras.length > 0
           ? props.extras.map((x) => (
-              <li key={x.id} value={x.id}>
-                {x.name}
-              </li>
-            ))
+            <li key={x.id} value={x.id}>
+              {x.name}
+            </li>
+          ))
           : null}
       </ol>
       <h3 className="mb-[5px] mt-[30px] border border-[#000] text-[18px] rounded-[5px] flex justify-between px-[8px] py-[10px]">
