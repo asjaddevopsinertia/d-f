@@ -43,3 +43,12 @@ body{
 .react-calendar-datetime-picker .daysList .is-selected-day{
   background-color: #6A64F1 !important;
 }
+
+#payment-form{
+    border-radius: 8px;
+    padding-right: 30px;
+    padding-left: 30px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+    box-shadow: #DDE3EC 0px 2px 8px 0px;
+}

@@ -3,15 +3,13 @@ import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import { ItemsContainer } from "../common/ItemsContainer";
 import {
-  showForm,
   closeForm,
-  showButton,
 } from "../store/slices/MultistepSlice";
 import img from "../assets/images/x-mark.png";
-import check from "../assets/images/checked.png";
-import { DtCalendar, DtPicker } from 'react-calendar-datetime-picker'
-import 'react-calendar-datetime-picker/dist/style.css'
 import { loginAsync } from "../store/slices/UserSlice";
+import { Elements } from "@stripe/react-stripe-js";
+import CheckoutForm from "./CheckoutForm";
+import { loadStripe } from "@stripe/stripe-js";
 
 const MultiStepForm = () => {
   const dispatch = useDispatch();
@@ -21,6 +19,20 @@ const MultiStepForm = () => {
   );
   const [userError, setUserError] = useState(false);
   const [loginState, setLoginState] = useState(false);
+
+  const [stripePromise, setStripePromise] = useState(null);
+  const [clientSecret, setClientSecret] = useState("");
+
+  useEffect(() => {
+    fetch("http://localhost:4000/payment/config").then(async (r) => {
+      const { publishableKey } = await r.json();
+      setStripePromise(loadStripe(publishableKey));
+    });
+  }, []);
+
+  // useEffect(() => {
+   
+  // }, []);
 
   const formState = useSelector((state) => state.form.show);
 
@@ -86,12 +98,13 @@ const MultiStepForm = () => {
     userId: null,
     appointments: [
       {
-        serviceId:
-          Array.isArray(selectedServices) && selectedServices.length > 0
-            ? selectedServices[0].id
-            : null, // Assuming selectedServicesInput has an 'id' property
+        serviceId: null,
         addressId: null,
-        extras: selectedExtras.map((extra) => extra.id), // Assuming extras have an 'id' property
+        extras: null, // Assuming extras have an 'id' property
+        price:null,
+        numberOfRooms: null,
+        numberOfBathrooms:null,
+        typeName:null,
       },
     ],
     appointmentDate: null,
@@ -154,12 +167,13 @@ const MultiStepForm = () => {
     await new Promise((resolve) => setTimeout(resolve, ms));
 
   const goToNext = async () => {
-    setLoading(true);
     try {
       const response1 = await axios.post(
         "http://localhost:4000/user/address",
         addressData
       );
+
+      if(response1.data.status === "success"){
 
       setFormData((prevFormData) => ({
         ...prevFormData,
@@ -170,32 +184,34 @@ const MultiStepForm = () => {
           },
         ],
       }));
+        setStep(4)
+    }
 
-      const formD = {
-        ...formData,
-        appointments: [
-          {
-            ...formData.appointments[0],
-            addressId: response1.data.addressId,
-          },
-        ],
-      };
+      // const formD = {
+      //   ...formData,
+      //   appointments: [
+      //     {
+      //       ...formData.appointments[0],
+      //       addressId: response1.data.addressId,
+      //     },
+      //   ],
+      // };
 
-      console.log("formddd", formD);
+      // console.log("formddd", formD);
 
-      await delay(2000);
+      // await delay(2000);
 
-      const response2 = await axios.post(
-        "http://localhost:4000/appointment/select-service",
-        formD
-      );
-      console.log("response", response2);
-      setPaymentData((prevPaymentData) => ({
-        ...prevPaymentData,
-        appointmentId: response2.data.appointmentIds[0],
-      }));
-      setLoading(false);
-      setStep(3);
+      // const response2 = await axios.post(
+      //   "http://localhost:4000/appointment/select-service",
+      //   formD
+      // );
+      // console.log("response", response2);
+      // setPaymentData((prevPaymentData) => ({
+      //   ...prevPaymentData,
+      //   appointmentId: response2.data.appointmentIds[0],
+      // }));
+      // setLoading(false);
+      // setStep(3);
     } catch (error) {
       console.error(error);
     }
@@ -210,17 +226,18 @@ const MultiStepForm = () => {
   };
 
   const pay = () => {
-    console.log("payment", paymentData);
-    axios
-      .post("http://localhost:4000/payment/make-payment", paymentData)
-      .then((response) => {
-        setStep(4);
-        setTimeout(() => {
-          dispatch(closeForm());
-        }, 2000);
-        dispatch(showButton());
-      })
-      .catch((error) => console.log(error));
+    
+    setStep(5)
+    // axios
+    //   .post("http://localhost:4000/payment/make-payment", paymentData)
+    //   .then((response) => {
+    //     setStep(4);
+    //     setTimeout(() => {
+    //       dispatch(closeForm());
+    //     }, 2000);
+    //     dispatch(showButton());
+    //   })
+    //   .catch((error) => console.log(error));
   };
 
   const closeModal = () => {
@@ -383,17 +400,36 @@ const MultiStepForm = () => {
       const totalPrice = basePrice;
       setTotal(totalPrice.toFixed(2));
     }
+
   }, [numberOfRooms, numberOfBathrooms, serv, type, selectedAddons])
 
   // Event handlers for user input changes
   const handleRoomsChange = (event) => {
     setNumberOfRooms(parseInt(event.target.value, 10));
     // calculateTotalPrice();
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      appointments: [
+        {
+          ...prevFormData.appointments[0],
+          numberOfRooms: parseInt(event.target.value, 10),
+        },
+      ],
+    }));
   };
 
   const handleBathroomsChange = (event) => {
     setNumberOfBathrooms(parseInt(event.target.value, 10));
     // calculateTotalPrice();
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      appointments: [
+        {
+          ...prevFormData.appointments[0],
+          numberOfBathrooms: parseInt(event.target.value, 10),
+        },
+      ],
+    }));
   };
 
   const handleTypeChange = (event) => {
@@ -408,6 +444,15 @@ const MultiStepForm = () => {
 
     // Now you can use the 'title' variable as needed
     setType(title);
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      appointments: [
+        {
+          ...prevFormData.appointments[0],
+          typeName: title,
+        },
+      ],
+    }));
     // calculateTotalPrice();
   };
 
@@ -420,9 +465,19 @@ const MultiStepForm = () => {
 
     // Access the title attribute of the selected option
     const title = selectedOption.getAttribute("title");
+    const id = selectedOption.getAttribute("id");
 
     // Now you can use the 'title' variable as needed
     setSer(title);
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      appointments: [
+        {
+          ...prevFormData.appointments[0],
+          serviceId: parseInt(id),
+        },
+      ],
+    }));
     // calculateTotalPrice();
   };
 
@@ -444,24 +499,53 @@ const MultiStepForm = () => {
     }
   };
 
-  console.log("numberofroooms", numberOfRooms);
-  console.log("numberofbathrooms", numberOfBathrooms);
-  console.log("seletectedType", selectedType);
-  console.log("selectedService", selectedService);
 
-  console.log("toal", total);
-  console.log("selectedaddons", selectedAddons)
+  useEffect(() => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      appointments: [
+        {
+          ...prevFormData.appointments[0],
+          extras: selectedAddons.map((x) => x.id),
+        },
+      ],
+    }));
+  }, [selectedAddons])
+
+  useEffect(() => {
+    let p = parseFloat(total)
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      appointments: [
+        {
+          ...prevFormData.appointments[0],
+          price: p.toFixed(2),
+        },
+      ],
+    }));
+  }, [total])
+ 
   const [date, setDate] = useState(null)
 
 
-  console.log("date", date)
+  console.log("******************* form *********", formData)
+
+  const setIntent = () => {
+    axios.post("http://localhost:4000/payment/create", {
+      price:total
+    }).then(async(result) => {
+      var { clientSecret } = await result.data;
+      setClientSecret(clientSecret);
+      setStep(2)
+    });
+  }
 
   return (
     <>
       {formState ? (
         <>
           <div className="fixed top-0 left-0 w-full h-full bg-[#EDEDED] z-2 opacity-[0.85]"></div>
-          <div className="absolute top-[-400px] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[3] max-w-[800px] w-[100%]">
+          <div className="fixed top-[50%] left-[50%] transform -translate-x-1/2 -translate-y-1/2 z-[3] max-w-[750px] w-[100%]">
             <ItemsContainer style="max-w-[1230px]">
               <div className="flex items-center justify-center h-screen w-full">
                 <div className="bg-white p-6 rounded-lg shadow-md w-full lg:max-w-xl">
@@ -500,7 +584,7 @@ const MultiStepForm = () => {
                       </div>
 
                       <div className="">
-                        <p>Login</p>
+                        <p>Login / Register</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-center">
@@ -514,7 +598,7 @@ const MultiStepForm = () => {
                       </div>
 
                       <div className="">
-                        <p>Add Address</p>
+                        <p>Add Details</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-center">
@@ -542,7 +626,7 @@ const MultiStepForm = () => {
                       </div>
 
                       <div className="">
-                        <p>Confirmation</p>
+                        <p>Pay</p>
                       </div>
                     </div>
                   </div>
@@ -563,6 +647,7 @@ const MultiStepForm = () => {
                       setStep={setStep}
                       handleAddonChange={handleAddonChange}
                       selectedAddons={selectedAddons}
+                      setIntent={setIntent}
                     />
                   ) : step === 2 ? (
                     <Step2
@@ -587,6 +672,9 @@ const MultiStepForm = () => {
                       handleDateChange={handleDateChange}
                       goToNext={goToNext}
                       loading={loading}
+                      serv = {serv}
+                      selectedAddons = {selectedAddons}
+                      type = {type}
                     />
                   ) : step === 4 ? (
                     <Step4
@@ -595,9 +683,18 @@ const MultiStepForm = () => {
                       services={selectedServices}
                       extras={selectedExtras}
                       previous={previous}
+                      serv = {serv}
+                      selectedAddons = {selectedAddons}
+                      type = {type}
+                      total={total}
+                      numberOfRooms = {numberOfRooms}
+                      numberOfBathrooms = {numberOfBathrooms}
                     />
                   ) : (
-                    <Step5 />
+                    <Step5
+                    clientSecret = {clientSecret}
+                    stripePromise = {stripePromise}
+                    formData = {formData} />
                   )}
 
                   {/* <div className="flex justify-between mt-6">
@@ -644,7 +741,8 @@ const Step1 = ({
   handleAddonChange,
   step = { step },
   setStep = { setStep },
-  selectedAddons
+  selectedAddons,
+  setIntent
 }) => (
   <>
     {" "}
@@ -653,7 +751,7 @@ const Step1 = ({
       // Manually trigger the form validation
       if (e.target.checkValidity()) {
         // If the form is valid, proceed with your logic (e.g., login())
-        setStep(step + 1)
+        setIntent()
       }
     }}>
       <div className="flex flex-col">
@@ -670,7 +768,7 @@ const Step1 = ({
                 ? allServices.map((x) => {
                   return (
                     <option
-                      x={x.service_id}
+                      id={x.service_id}
                       title={x.service_name}
                       value={x.price}
                     >
@@ -688,6 +786,7 @@ const Step1 = ({
               class="w-full bg-[#FFF] border border-[#DDE3EC] text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-2"
               type="text"
               onChange={handleRoomsChange}
+              defaultValue={0}
             />
           </div>
 
@@ -703,6 +802,7 @@ const Step1 = ({
               type="text"
               onChange={handleBathroomsChange}
               required={true}
+              defaultValue={0}
             />
           </div>
 
@@ -717,7 +817,7 @@ const Step1 = ({
               {Array.isArray(allTypes) && allTypes.length > 0
                 ? allTypes.map((x) => {
                   return (
-                    <option x={x.id} title={x.type} value={x.price}>
+                    <option id={x.id} title={x.type} value={x.price}>
                       {x.type}
                     </option>
                   );
@@ -730,7 +830,7 @@ const Step1 = ({
         <div className="flex justify-between space-x-4 mt-4">
           <div className="flex flex-1 flex-col">
             <label>Select Addons</label>
-            <div className="h-[250px]  border border-[#DDE3EC] text-gray-900 text-sm rounded-lg overflow-x-hidden overflow-y-visible mt-[10px] p-2.5">
+            <div className="h-[150px]  border border-[#DDE3EC] text-gray-900 text-sm rounded-lg overflow-x-hidden overflow-y-visible mt-[10px] p-2.5">
               {Array.isArray(allAddons) && allAddons.length > 0 ? (
                 allAddons.map((x) => (
                   <div key={x.extra_id} className="flex items-center mt-2">
@@ -988,6 +1088,22 @@ const Step3 = (props) => {
         >
           <div className="flex flex-col">
             <div className="flex justify-between space-x-[20px]">
+            <div className="flex-1">
+                <div className="flex flex-col">
+                  <label htmlFor="appointmentDate">
+                    Choose Appointment Date:
+                  </label>
+                  <input
+                    open={true}
+                    className="bg-[#FFF] border border-[#DDE3EC] text-[#536387] text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-2"
+                    type="datetime-local"
+                    id="appointmentDate"
+                    onChange={props.handleDateChange}
+                    required={true}
+                  />
+                </div>
+              </div>
+
               <div className="flex-1">
                 <label className="mt-[15px]" htmlFor="address">
                   Address Line 1 *
@@ -1009,7 +1125,12 @@ const Step3 = (props) => {
                 />
               </div>
 
-              <div className="flex-1">
+        
+            </div>
+
+            <div className="flex justify-between mt-[18px] space-x-[20px]">
+
+            <div className="flex-1">
                 <label className="mt-[15px]" htmlFor="address">
                   Address Line 2
                 </label>
@@ -1028,9 +1149,7 @@ const Step3 = (props) => {
                   }
                 />
               </div>
-            </div>
 
-            <div className="flex justify-between mt-[18px] space-x-[20px]">
               <div className="flex-1">
                 <label className="mt-[15px]" htmlFor="address">
                   State *
@@ -1051,7 +1170,12 @@ const Step3 = (props) => {
                 />
               </div>
 
-              <div className="flex-1">
+          
+            </div>
+
+            <div className="flex justify-between mt-[18px] space-x-[20px]">
+
+            <div className="flex-1">
                 <label className="mt-[15px]" htmlFor="address">
                   City *
                 </label>
@@ -1071,9 +1195,6 @@ const Step3 = (props) => {
                   required={true}
                 />
               </div>
-            </div>
-
-            <div className="flex justify-between mt-[18px] space-x-[20px]">
               <div className="flex-1">
                 <label className="mt-[15px]" htmlFor="address">
                   Zip Code *
@@ -1095,21 +1216,7 @@ const Step3 = (props) => {
                 />
               </div>
 
-              <div className="flex-1">
-                <div className="flex flex-col">
-                  <label htmlFor="appointmentDate">
-                    Choose Appointment Date:
-                  </label>
-                  <input
-                    open={true}
-                    className="bg-[#FFF] border border-[#DDE3EC] text-[#536387] text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-2"
-                    type="datetime-local"
-                    id="appointmentDate"
-                    onChange={props.handleDateChange}
-                    required={true}
-                  />
-                </div>
-              </div>
+             
             </div>
           </div>
 
@@ -1136,28 +1243,42 @@ const Step3 = (props) => {
 const Step4 = (props) => (
   <div>
     <div>
-      <h3 className="text-[20px] mt-[10px] mb-[10px]">Your Service :</h3>
-      {Array.isArray(props.services) && props.services.length > 0
-        ? props.services.map((x) => (
-          <h4
-            className="text-[20px] font-bold leading-[34px] pb-[10px]"
-            key={x.id}
-            value={x.id}
-          >
-            {x.name}
-          </h4>
-        ))
-        : null}
+      <h3 className="text-[20px] mt-[10px] font-ArialB">Selected Service :</h3>
+      <h4
+            className="text-[18px] leading-[34px] pb-[10px]"
 
-      <h3 className="mb-[10px] mt-[10px] text-[20px]">Extras Selected:</h3>
+          >
+            {props.serv}
+          </h4>
+
+
+          <h3 className="text-[20px] mt-[10px] font-ArialB">Number of rooms :</h3>
+      <h4
+            className="text-[18px] leading-[34px] pb-[10px]"
+
+          >
+            {props.numberOfRooms}
+          </h4>
+
+
+          
+          <h3 className="text-[20px] mt-[10px] font-ArialB">Number of bathrooms :</h3>
+      <h4
+            className="text-[18px]  leading-[34px] pb-[10px]"
+
+          >
+            {props.numberOfBathrooms}
+          </h4>
+
+      <h3 className="mb-[10px] mt-[10px] text-[20px] font-ArialB">Selected Extras:</h3>
 
       <ol
         className="list-disc pl-[20px] space-y-[10px]"
         name="extras"
         id="extras"
       >
-        {Array.isArray(props.extras) && props.extras.length > 0
-          ? props.extras.map((x) => (
+        {Array.isArray(props.selectedAddons) && props.selectedAddons.length > 0
+          ? props.selectedAddons.map((x) => (
             <li key={x.id} value={x.id}>
               {x.name}
             </li>
@@ -1165,7 +1286,7 @@ const Step4 = (props) => (
           : null}
       </ol>
       <h3 className="mb-[5px] mt-[30px] border border-[#000] text-[18px] rounded-[5px] flex justify-between px-[8px] py-[10px]">
-        Total Amount: <p>{"$" + props.amount}</p>
+        Total Amount: <p>{"$" + props.total}</p>
       </h3>
 
       <div className="flex justify-between">
@@ -1187,13 +1308,37 @@ const Step4 = (props) => (
   </div>
 );
 
-const Step5 = () => (
-  <div className="flex flex-col justify-center items-center pt-[80px] pb-[80px]">
-    <img src={check} className="w-[64px]" />
+const Step5 = ({clientSecret, stripePromise , formData}) => (
+  <div className="flex w-full pt-[20px] pb-[20px] justify-center items-center">
+    {/* <img src={check} className="w-[64px]" />
     <h3 className="text-[25px] mt-[10px]">
       Your appointment has been successfully submitted
-    </h3>
+    </h3> */}
+
+
+    {clientSecret && stripePromise && (
+        <Elements stripe={stripePromise} options={{ clientSecret }}>
+          <CheckoutForm formData = {formData}/>
+        </Elements>
+      )}
   </div>
 );
+
+
+// const Step6 = ({clientSecret, stripePromise , formData}) => (
+//   <div className="flex w-full pt-[20px] pb-[20px]">
+//     {/* <img src={check} className="w-[64px]" />
+//     <h3 className="text-[25px] mt-[10px]">
+//       Your appointment has been successfully submitted
+//     </h3> */}
+
+
+//     {clientSecret && stripePromise && (
+//         <Elements stripe={stripePromise} options={{ clientSecret }}>
+//           <CheckoutForm formData = {formData}/>
+//         </Elements>
+//       )}
+//   </div>
+// );
 
 export default MultiStepForm;

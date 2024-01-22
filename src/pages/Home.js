@@ -36,35 +36,14 @@ export const Home = () => {
       <MainBanner />
       <TrustCard />
       <WorkCard />
+      
+
+      <div className="relative">
       <ServicesCard />
       <ExtrasCard />
-
-      {buttonState ? <div className="relative">
-        <ItemsContainer style="max-w-[1230px]">
-          <div className="flex justify-center mt-[30px]">
-            <a target="_blank" href="http://localhost:3001/auth/login"
-              className="bg-[#0142E8] text-[#fff] font-ArialB border-none px-[80px] py-[10px] rounded-[5px]"
-              onClick={() => show()}
-            >
-              Go to your Dashboard
-            </a>
-          </div>
-        </ItemsContainer>
         <MultiStepForm />
-      </div> : 
-      <div className="relative">
-        <ItemsContainer style="max-w-[1230px]">
-          <div className="flex justify-center mt-[30px]">
-            <button
-              className="bg-[#0142E8] text-[#fff] font-ArialB border-none px-[80px] py-[10px] rounded-[5px]"
-              onClick={() => show()}
-            >
-              Continue
-            </button>
-          </div>
-        </ItemsContainer>
-        <MultiStepForm />
-      </div>}
+      </div>
+      
       
       <TestimonialCard />
       <Consultation />

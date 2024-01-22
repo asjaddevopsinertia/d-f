@@ -23,12 +23,21 @@ import {
 } from "../../store/slices/ServicesSlice";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
+import { showForm } from "../../store/slices/MultistepSlice";
 
 export const ServicesCard = () => {
   const dispatch = useDispatch();
   const selectedServices = useSelector(
     (state) => state.services.selectedServices
   );
+
+  const buttonState = useSelector((state) => state.form.buttonState);
+
+
+  const show = () => {
+     dispatch(showForm())
+  };
 
   console.log("selected", selectedServices);
 
@@ -151,9 +160,7 @@ export const ServicesCard = () => {
             : ""} */}
 
           <div
-            onClick={() =>
-              handleSelectService(10, "Deep Cleaning of Occupied Homes", 2000)
-            }
+           
             className="border-2 border-[#E7E7E7] rounded-[5px] relative pt-[85px] pb-[60px] pl-[30px] pr-[30px] group hover:bg-[#003DDF] cursor-pointer"
           >
             <div className="absolute right-[30px] top-[30px]">
@@ -191,13 +198,7 @@ export const ServicesCard = () => {
           </div>
 
           <div
-            onClick={() =>
-              handleSelectService(
-                5,
-                " Move-In & Move-Out Cleaning of Vacant Homes",
-                10
-              )
-            }
+            
             className="border-2 border-[#E7E7E7] rounded-[5px] relative pt-[85px] pb-[60px] pl-[30px] pr-[30px] group hover:bg-[#003DDF] cursor-pointer"
           >
             <div className="absolute right-[30px] top-[30px]">
@@ -227,7 +228,7 @@ export const ServicesCard = () => {
             </div>
             <div className="absolute right-[30px] bottom-[20px]">
               <div>
-                <button className="text-[#0142e8] font-ArialB group-hover:text-[#FFEA3A]">
+                <button onClick={() => show()} className="text-[#0142e8] font-ArialB group-hover:text-[#FFEA3A]">
                   Book Now
                 </button>
               </div>
@@ -235,13 +236,7 @@ export const ServicesCard = () => {
           </div>
 
           <div
-            onClick={() =>
-              handleSelectService(
-                6,
-                "Vacation Rentals Cleaning & Concierge Service (Airbnb)",
-                10
-              )
-            }
+          
             className="border-2 border-[#E7E7E7] rounded-[5px] relative pt-[85px] pb-[60px] pl-[30px] pr-[30px] group hover:bg-[#003DDF] cursor-pointer"
           >
             <div className="absolute right-[30px] top-[30px]">
@@ -271,7 +266,7 @@ export const ServicesCard = () => {
             </div>
             <div className="absolute right-[30px] bottom-[20px]">
               <div>
-                <button className="text-[#0142e8] font-ArialB group-hover:text-[#FFEA3A]">
+                <button onClick={() => show()} className="text-[#0142e8] font-ArialB group-hover:text-[#FFEA3A]">
                   Book Now
                 </button>
               </div>
@@ -279,9 +274,7 @@ export const ServicesCard = () => {
           </div>
 
           <div
-            onClick={() =>
-              handleSelectService(7, "High-End Estates Cleaning", 10)
-            }
+           
             className="border-2 border-[#E7E7E7] rounded-[5px] relative pt-[85px] pb-[60px] pl-[30px] pr-[30px] group hover:bg-[#003DDF] cursor-pointer"
           >
             <div className="absolute right-[30px] top-[30px]">
@@ -311,21 +304,15 @@ export const ServicesCard = () => {
             </div>
             <div className="absolute right-[30px] bottom-[20px]">
               <div>
-                <button className="text-[#0142e8] font-ArialB group-hover:text-[#FFEA3A]">
+                  <Link to='/contact' className="text-[#0142e8] font-ArialB group-hover:text-[#FFEA3A]">
                   Contact Us
-                </button>
+                </Link>
               </div>
             </div>
           </div>
 
           <div
-            onClick={() =>
-              handleSelectService(
-                6,
-                "Vacation Rentals Cleaning & Concierge Service (Airbnb)",
-                10
-              )
-            }
+           
             className="border-2 border-[#E7E7E7] rounded-[5px] relative pt-[85px] pb-[60px] pl-[30px] pr-[30px] group hover:bg-[#003DDF] cursor-pointer"
           >
             <div className="absolute right-[30px] top-[30px]">
@@ -355,7 +342,7 @@ export const ServicesCard = () => {
             </div>
             <div className="absolute right-[30px] bottom-[20px]">
               <div>
-                <button className="text-[#0142e8] font-ArialB group-hover:text-[#FFEA3A]">
+                <button onClick={() => show()} className="text-[#0142e8] font-ArialB group-hover:text-[#FFEA3A]">
                   Book Now
                 </button>
               </div>
@@ -363,13 +350,7 @@ export const ServicesCard = () => {
           </div>
 
           <div
-            onClick={() =>
-              handleSelectService(
-                6,
-                "Vacation Rentals Cleaning & Concierge Service (Airbnb)",
-                10
-              )
-            }
+            
             className="border-2 border-[#E7E7E7] rounded-[5px] relative pt-[85px] pb-[60px] pl-[30px] pr-[30px] group hover:bg-[#003DDF] cursor-pointer"
           >
             <div className="absolute right-[30px] top-[30px]">
@@ -399,7 +380,7 @@ export const ServicesCard = () => {
             </div>
             <div className="absolute right-[30px] bottom-[20px]">
               <div>
-                <button className="text-[#0142e8] font-ArialB group-hover:text-[#FFEA3A]">
+                <button onClick={() => show()} className="text-[#0142e8] font-ArialB group-hover:text-[#FFEA3A]">
                   Book Now
                 </button>
               </div>
@@ -407,13 +388,7 @@ export const ServicesCard = () => {
           </div>
 
           <div
-            onClick={() =>
-              handleSelectService(
-                6,
-                "Vacation Rentals Cleaning & Concierge Service (Airbnb)",
-                10
-              )
-            }
+           
             className="border-2 border-[#E7E7E7] rounded-[5px] relative pt-[85px] pb-[60px] pl-[30px] pr-[30px] group hover:bg-[#003DDF] cursor-pointer"
           >
             <div className="absolute right-[30px] top-[30px]">
@@ -443,7 +418,7 @@ export const ServicesCard = () => {
             </div>
             <div className="absolute right-[30px] bottom-[20px]">
               <div>
-                <button className="text-[#0142e8] font-ArialB group-hover:text-[#FFEA3A]">
+                <button onClick={() => show()} className="text-[#0142e8] font-ArialB group-hover:text-[#FFEA3A]">
                   Book Now
                 </button>
               </div>
@@ -451,9 +426,7 @@ export const ServicesCard = () => {
           </div>
 
           <div
-            onClick={() =>
-              handleSelectService(8, "Post-Construction Cleaning", 10)
-            }
+           
             className="border-2 border-[#E7E7E7] rounded-[5px] relative pt-[85px] pb-[60px] pl-[30px] pr-[30px] group hover:bg-[#003DDF] cursor-pointer"
           >
             <div className="absolute right-[30px] top-[30px]">
@@ -483,9 +456,9 @@ export const ServicesCard = () => {
             </div>
             <div className="absolute right-[30px] bottom-[20px]">
               <div>
-                <button className="text-[#0142e8] font-ArialB group-hover:text-[#FFEA3A]">
+                <Link to='/contact' className="text-[#0142e8] font-ArialB group-hover:text-[#FFEA3A]">
                   Contact Us
-                </button>
+                </Link>
               </div>
             </div>
           </div>
